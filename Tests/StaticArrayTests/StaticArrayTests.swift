@@ -27,25 +27,57 @@ final class StaticArrayTests: XCTestCase {
                 }
             
                 subscript(_ index: Index) -> UInt8 {
-                    switch (index, repr) {
-                        case (.i0, (let x, _, _, _)), (.i1, (_, let x, _, _)), (.i2, (_, _, let x, _)), (.i3, (_, _, _, let x)):
-                        return x
+                    get {
+                        switch index {
+                        case .i0:
+                            return repr.0
+                        case .i1:
+                            return repr.1
+                        case .i2:
+                            return repr.2
+                        case .i3:
+                            return repr.3
+                        }
+                    }
+                    set {
+                        switch index {
+                        case .i0:
+                            repr.0 = newValue
+                        case .i1:
+                            repr.1 = newValue
+                        case .i2:
+                            repr.2 = newValue
+                        case .i3:
+                            repr.3 = newValue
+                        }
                     }
                 }
             
                 subscript(safe intIndex: Int) -> UInt8? {
-                    guard let index = Index(rawValue: index) else {
+                    guard let index = Index(rawValue: intIndex) else {
                         return nil
                     }
                     return self [index]
                 }
             
                 subscript(_ intIndex: Int) -> UInt8 {
-                    guard let value = self [safe: intIndex]
-                    else {
-                        preconditionFailure(
-                                    "Attempted to access a static array IPv4 (size: 4) with an integer index out of bounds (index: \\(intIndex))"
-                                )
+                    get {
+                        guard let index = Index(rawValue: intIndex)
+                        else {
+                            preconditionFailure(
+                                            "Attempted to access a static array IPv4 (size: 4) with an integer index out of bounds (index: \\(intIndex))"
+                                        )
+                        }
+                        return self [index]
+                    }
+                    set {
+                        guard let index = Index(rawValue: intIndex)
+                        else {
+                            preconditionFailure(
+                                            "Attempted to write to a static array IPv4 (size: 4) with an integer index out of bounds (index: \\(intIndex))"
+                                        )
+                        }
+                        self [index] = newValue
                     }
                 }
             
@@ -78,25 +110,45 @@ final class StaticArrayTests: XCTestCase {
                 }
             
                 subscript(_ index: Index) -> () {
-                    switch (index, repr) {
-                        case (.i0, (let x)):
-                        return x
+                    get {
+                        switch index {
+                        case .i0:
+                            return repr.0
+                        }
+                    }
+                    set {
+                        switch index {
+                        case .i0:
+                            repr.0 = newValue
+                        }
                     }
                 }
             
                 subscript(safe intIndex: Int) -> ()? {
-                    guard let index = Index(rawValue: index) else {
+                    guard let index = Index(rawValue: intIndex) else {
                         return nil
                     }
                     return self [index]
                 }
             
                 subscript(_ intIndex: Int) -> () {
-                    guard let value = self [safe: intIndex]
-                    else {
-                        preconditionFailure(
-                                    "Attempted to access a static array VoidWrapper (size: 1) with an integer index out of bounds (index: \\(intIndex))"
-                                )
+                    get {
+                        guard let index = Index(rawValue: intIndex)
+                        else {
+                            preconditionFailure(
+                                            "Attempted to access a static array VoidWrapper (size: 1) with an integer index out of bounds (index: \\(intIndex))"
+                                        )
+                        }
+                        return self [index]
+                    }
+                    set {
+                        guard let index = Index(rawValue: intIndex)
+                        else {
+                            preconditionFailure(
+                                            "Attempted to write to a static array VoidWrapper (size: 1) with an integer index out of bounds (index: \\(intIndex))"
+                                        )
+                        }
+                        self [index] = newValue
                     }
                 }
             

@@ -73,26 +73,33 @@ public struct StaticArrayMacro: DeclarationMacro {
             }
         }
         
-        let subscriptSwitchPattern = SwitchCaseLabelSyntax {
+        let subscriptGetCases = SwitchCaseListSyntax {
             for (i, indexName) in indices.enumerated() {
-                let indexPattern = ExpressionPatternSyntax(
-                    expression: MemberAccessExprSyntax(name: indexName)
-                )
-                
-                let reprPattern = TuplePatternSyntax {
-                    for j in 0..<count {
-                        if i == j {
-                            TuplePatternElementSyntax(pattern: PatternSyntax("let x"))
-                        } else {
-                            TuplePatternElementSyntax(pattern: WildcardPatternSyntax())
-                        }
-                    }
+                let label = SwitchCaseLabelSyntax {
+                    SwitchCaseItemSyntax(pattern: ExpressionPatternSyntax(expression: MemberAccessExprSyntax(name: indexName)))
                 }
-                
-                SwitchCaseItemSyntax(pattern: TuplePatternSyntax {
-                    TuplePatternElementSyntax(pattern: indexPattern)
-                    TuplePatternElementSyntax(pattern: reprPattern)
-                })
+                SwitchCaseSyntax(
+                    label: .case(label),
+                    statementsBuilder:  {
+                        "return repr.\(raw: i)"
+                    },
+                    trailingTrivia: .space
+                )
+            }
+        }
+        
+        let subscriptSetCases = SwitchCaseListSyntax {
+            for (i, indexName) in indices.enumerated() {
+                let label = SwitchCaseLabelSyntax {
+                    SwitchCaseItemSyntax(pattern: ExpressionPatternSyntax(expression: MemberAccessExprSyntax(name: indexName)))
+                }
+                SwitchCaseSyntax(
+                    label: .case(label),
+                    statementsBuilder: {
+                        "repr.\(raw: i) = newValue"
+                    },
+                    trailingTrivia: .space
+                )
             }
         }
         
@@ -105,22 +112,38 @@ public struct StaticArrayMacro: DeclarationMacro {
             }
         
             subscript(_ index: Index) -> \(elementType) {
-                switch (index, repr) {
-                    \(subscriptSwitchPattern)
-                    return x
+                get {
+                    switch index {
+                    \(subscriptGetCases)
+                    }
+                }
+                set {
+                    switch index {
+                    \(subscriptSetCases)
+                    }
                 }
             }
             
             subscript(safe intIndex: Int) -> \(elementType)? {
-                guard let index = Index(rawValue: index) else { return nil }
+                guard let index = Index(rawValue: intIndex) else { return nil }
                 return self[index]
             }
         
             subscript(_ intIndex: Int) -> \(elementType) {
-                guard let value = self[safe: intIndex]
-                else { preconditionFailure(
-                    "Attempted to access a static array \(name) (size: \(literal: count)) with an integer index out of bounds (index: \\(intIndex))"
-                ) }
+                get {
+                    guard let index = Index(rawValue: intIndex)
+                    else { preconditionFailure(
+                        "Attempted to access a static array \(name) (size: \(literal: count)) with an integer index out of bounds (index: \\(intIndex))"
+                    ) }
+                    return self[index]
+                }
+                set {
+                    guard let index = Index(rawValue: intIndex)
+                    else { preconditionFailure(
+                        "Attempted to write to a static array \(name) (size: \(literal: count)) with an integer index out of bounds (index: \\(intIndex))"
+                    ) }
+                    self[index] = newValue
+                }
             }
         
             typealias ArrayLiteralElement = \(elementType)
