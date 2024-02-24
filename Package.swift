@@ -13,10 +13,10 @@ let package = Package(
             name: "StaticArray",
             targets: ["StaticArray"]
         ),
-        .executable(
-            name: "StaticArrayClient",
-            targets: ["StaticArrayClient"]
-        ),
+//        .executable(
+//            name: "StaticArrayClient",
+//            targets: ["StaticArrayClient"]
+//        ),
     ],
     dependencies: [
         // Depend on the Swift 5.9 release of SwiftSyntax
@@ -38,7 +38,7 @@ let package = Package(
         .target(name: "StaticArray", dependencies: ["StaticArrayMacros"]),
 
         // A client of the library, which is able to use the macro in its own code.
-        .executableTarget(name: "StaticArrayClient", dependencies: ["StaticArray"]),
+//        .executableTarget(name: "StaticArrayClient", dependencies: ["StaticArray"]),
 
         // A test target used to develop the macro implementation.
         .testTarget(

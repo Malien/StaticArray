@@ -1,11 +1,16 @@
-// The Swift Programming Language
-// https://docs.swift.org/swift-book
+@freestanding(declaration, names: arbitrary)
+public macro StaticArray<Element>(count: Count, named: StaticString, visibility: Visibility = .none) = #externalMacro(module: "StaticArrayMacros", type: "StaticArrayMacro")
 
-/// A macro that produces both a value and a string containing the
-/// source code that generated the value. For example,
-///
-///     #stringify(x + y)
-///
-/// produces a tuple `(x + y, "x + y")`.
-@freestanding(expression)
-public macro stringify<T>(_ value: T) -> (T, String) = #externalMacro(module: "StaticArrayMacros", type: "StringifyMacro")
+public enum Visibility {
+    case `public`, `private`, `none`, `fileprivate`
+}
+
+extension Visibility: ExpressibleByNilLiteral {
+    public init(nilLiteral: ()) { self = .none }
+}
+
+public struct Count { }
+extension Count: ExpressibleByIntegerLiteral {
+    public typealias IntegerLiteralType = Int
+    public init(integerLiteral value: Int) { }
+}
