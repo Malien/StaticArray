@@ -2,6 +2,9 @@ import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
 
+import SwiftSyntax
+import SwiftSyntaxBuilder
+
 // Macro implementations build for the host, so the corresponding module is not available when cross-compiling. Cross-compiled tests may still make use of the macro itself in end-to-end tests.
 #if canImport(StaticArrayMacros)
 import StaticArrayMacros
@@ -21,6 +24,14 @@ final class StaticArrayTests: XCTestCase {
             expandedSource: """
             struct IPv4: ExpressibleByArrayLiteral {
                 var repr: (UInt8, UInt8, UInt8, UInt8)
+            
+                init(_ repr: (UInt8, UInt8, UInt8, UInt8)) {
+                    self.repr = repr
+                }
+            
+                init(_ v0: UInt8, _ v1: UInt8, _ v2: UInt8, _ v3: UInt8) {
+                    self.repr = (v0, v1, v2, v3)
+                }
             
                 enum Index: CaseIterable, Int {
                     case i0, i1, i2, i3
@@ -104,6 +115,14 @@ final class StaticArrayTests: XCTestCase {
             expandedSource: """
             struct VoidWrapper: ExpressibleByArrayLiteral {
                 var repr: (())
+            
+                init(_ repr: (())) {
+                    self.repr = repr
+                }
+            
+                init(_ v0: ()) {
+                    self.repr = (v0)
+                }
             
                 enum Index: CaseIterable, Int {
                     case i0

@@ -60,7 +60,7 @@ public struct StaticArrayMacro: DeclarationMacro {
             }
         })
         
-        let constructor = TupleExprSyntax {
+        let arrayLiteralConstructor = TupleExprSyntax {
             for i in 0..<count {
                 LabeledExprSyntax(expression: ExprSyntax("elements[\(literal: i)]"))
             }
@@ -103,9 +103,30 @@ public struct StaticArrayMacro: DeclarationMacro {
             }
         }
         
+        let initArgNames = (0..<count).map { TokenSyntax.identifier("v\($0)") }
+        let arglist = FunctionParameterListSyntax {
+            for argName in initArgNames {
+                FunctionParameterSyntax(firstName: .wildcardToken(trailingTrivia: .space), secondName: argName, type: elementType)
+            }
+        }
+        
+        let initConstructor = TupleExprSyntax {
+            for argName in initArgNames {
+                LabeledExprSyntax(expression: DeclReferenceExprSyntax(baseName: argName))
+            }
+        }
+        
         return ["""
         struct \(name): ExpressibleByArrayLiteral {
             var repr: \(arrayType)
+        
+            init(_ repr: \(arrayType)) {
+                self.repr = repr
+            }
+        
+            init(\(arglist)) {
+                self.repr = \(initConstructor)
+            }
         
             enum Index: CaseIterable, Int {
                 case \(indexCaseElements)
@@ -149,7 +170,7 @@ public struct StaticArrayMacro: DeclarationMacro {
             typealias ArrayLiteralElement = \(elementType)
             init(arrayLiteral elements: \(elementType)...) {
                 precondition(elements.count == \(literal: count), "Type \(name) (#StaticArray) can only be initialized with array literals with exact size of \(literal: count). Got a literal with \\(elements.count) elements")
-                self.repr = \(constructor)
+                self.repr = \(arrayLiteralConstructor)
             }
         }
         """]
