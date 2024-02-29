@@ -1,14 +1,15 @@
 import StaticArray
 
-enum Namespace {
+enum Net {
     #StaticArray<UInt8>(count: 4, named: "IPv4")
-//    #StaticArray<()>(count: 1, named: "VoidWrapper")
-//    #StaticArray<Int>(count: 0, named: "ZST")
-//    #StaticArray<Int>(count: -1, named: "NegativeMass")
+    #StaticArray<UInt8>(count: 16, named: "IPv6")
 }
 
-var a: Namespace.IPv4 = [127, 0, 0, 1]
-a.forEach { print($0) }
-a[.i0] = 192
-a[1] = 168
-print(a)
+var addr: Net.IPv4 = [127, 0, 0, 1]
+addr.forEach { print($0) }
+let humanReadable = addr.withUnsafeBuffer { buffer in
+    buffer.map(String.init).joined(separator: ".")
+}
+addr[.i0] = 192
+addr[1] = 168
+print(addr)

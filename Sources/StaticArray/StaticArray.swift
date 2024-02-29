@@ -30,6 +30,16 @@ public extension UnsafeStaticArrayProtocol {
         }
     }
     
+    var first: Element {
+        get { self[0] }
+        set { self[0] = newValue }
+    }
+    
+    var last: Element {
+        get { self[Self.count - 1] }
+        set { self[Self.count - 1] = newValue }
+    }
+    
     static var count: Int {
         MemoryLayout<Repr>.size / MemoryLayout<Element>.stride
     }
