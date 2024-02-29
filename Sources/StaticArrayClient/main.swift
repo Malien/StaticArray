@@ -10,4 +10,5 @@ enum Namespace {
 var a: Namespace.IPv4 = [127, 0, 0, 1]
 a.forEach { print($0) }
 a[.i0] = 192
+a[1] = 168
 print(a)

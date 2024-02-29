@@ -86,8 +86,27 @@ public struct StaticArrayMacro: DeclarationMacro {
             }
         }
         
+        let descriptionSegments = StringLiteralSegmentListSyntax {
+            StringSegmentSyntax(content: .stringSegment("["))
+            ExpressionSegmentSyntax {
+                LabeledExprSyntax(expression: ExprSyntax("repr.0"))
+            }
+            for i in 1..<count {
+                StringSegmentSyntax(content: .stringSegment(", "))
+                ExpressionSegmentSyntax {
+                    LabeledExprSyntax(expression: ExprSyntax("repr.\(raw: i)"))
+                }
+            }
+            StringSegmentSyntax(content: .stringSegment("]"))
+        }
+        let descritpionString = StringLiteralExprSyntax(
+            openingQuote: .stringQuoteToken(),
+            segments: descriptionSegments,
+            closingQuote: .stringQuoteToken()
+        )
+        
         return ["""
-        struct \(name): UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral {
+        struct \(name): UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral, CustomStringConvertible {
             var repr: \(arrayType)
         
             typealias Element = \(elementType)
@@ -103,6 +122,8 @@ public struct StaticArrayMacro: DeclarationMacro {
             enum Index: Int, CaseIterable {
                 case \(indexCaseElements)
             }
+        
+            var description: String { \(descritpionString) }
         
             typealias ArrayLiteralElement = \(elementType)
             init(arrayLiteral elements: \(elementType)...) {

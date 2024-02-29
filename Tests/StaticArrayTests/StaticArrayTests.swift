@@ -22,7 +22,7 @@ final class StaticArrayTests: XCTestCase {
             #StaticArray<UInt8>(count: 4, named: "IPv4")
             """,
             expandedSource: """
-            struct IPv4: UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral {
+            struct IPv4: UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral, CustomStringConvertible {
                 var repr: (UInt8, UInt8, UInt8, UInt8)
             
                 typealias Element = UInt8
@@ -37,6 +37,10 @@ final class StaticArrayTests: XCTestCase {
             
                 enum Index: Int, CaseIterable {
                     case i0, i1, i2, i3
+                }
+            
+                var description: String {
+                    "[\\(repr.0), \\(repr.1), \\(repr.2), \\(repr.3)]"
                 }
             
                 typealias ArrayLiteralElement = UInt8
