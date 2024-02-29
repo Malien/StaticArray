@@ -105,6 +105,58 @@ public struct StaticArrayMacro: DeclarationMacro {
             closingQuote: .stringQuoteToken()
         )
         
+        let missingVsPattern = (0..<count).map { 
+            TuplePatternElementSyntax(pattern: PatternSyntax("v\(raw: $0)?"))
+        }
+        let fromSeqInitPattern = TuplePatternSyntax {
+            for pattern in missingVsPattern {
+                pattern
+            }
+        }
+        
+        let tupleOfIterNexts = TupleExprSyntax {
+            for _ in 0..<count {
+                LabeledExprSyntax(expression: ExprSyntax("iter.next()"))
+            }
+        }
+        
+        let tupleOfDefaultIterNexts = TupleExprSyntax {
+            for _ in 0..<count - 1 {
+                LabeledExprSyntax(
+                    leadingTrivia: .newline,
+                    expression: ExprSyntax("iter.next() ?? defaultValue")
+                )
+            }
+            LabeledExprSyntax(
+                leadingTrivia: .newline,
+                expression: ExprSyntax("iter.next() ?? defaultValue"),
+                trailingTrivia: .newline
+            )
+        }
+        
+        let fromExactSeqInitExactPattern = TuplePatternSyntax {
+            for pattern in missingVsPattern {
+                pattern
+            }
+            TuplePatternElementSyntax(
+                pattern: ExpressionPatternSyntax(
+                    expression: NilLiteralExprSyntax()
+                )
+            )
+        }
+        
+        let fromExactSeqInitMorePattern = TuplePatternSyntax {
+            for _ in 0...count {
+                TuplePatternElementSyntax(pattern: PatternSyntax("_?"))
+            }
+        }
+        
+        let tupleOfIterNextsPlusOne = TupleExprSyntax {
+            for _ in 0...count {
+                LabeledExprSyntax(expression: ExprSyntax("iter.next()"))
+            }
+        }
+        
         return ["""
         struct \(name): UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral, CustomStringConvertible {
             var repr: \(arrayType)
@@ -117,6 +169,32 @@ public struct StaticArrayMacro: DeclarationMacro {
         
             init(\(arglist)) {
                 self.repr = \(initConstructor)
+            }
+        
+            init(from sequence: some Sequence<\(elementType)>) {
+                var iter = sequence.makeIterator()
+                if case let \(fromSeqInitPattern) = \(tupleOfIterNexts) {
+                    self.repr = \(initConstructor)
+                } else {
+                    preconditionFailure("Couldn't construct \(name) from a sequnce, which contains less than \(raw: count) elements")
+                }
+            }
+        
+            init(from sequence: some Sequence<\(elementType)>, fillingMissingWith defaultValue: \(elementType)) {
+                var iter = sequence.makeIterator()
+                self.repr = \(tupleOfDefaultIterNexts)
+            }
+        
+            init(fromExactlySized sequence: some Sequence<\(elementType)>) {
+                var iter = sequence.makeIterator()
+                switch \(tupleOfIterNextsPlusOne) {
+                case let \(fromExactSeqInitExactPattern):
+                    self.repr = \(initConstructor)
+                case \(fromExactSeqInitMorePattern):
+                    preconditionFailure("Couldn't construct \(name) from an exactly sized sequence, which contains more than \(raw: count) elements")
+                default:
+                    preconditionFailure("Couldn't construct \(name) from an exactly sized sequnce, which contains less than \(raw: count) elements")
+                }
             }
         
             enum Index: Int, CaseIterable {

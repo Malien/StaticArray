@@ -35,6 +35,37 @@ final class StaticArrayTests: XCTestCase {
                     self.repr = (v0, v1, v2, v3)
                 }
             
+                init(from sequence: some Sequence<UInt8>) {
+                    var iter = sequence.makeIterator()
+                    if case let (v0?, v1?, v2?, v3?) = (iter.next(), iter.next(), iter.next(), iter.next()) {
+                        self.repr = (v0, v1, v2, v3)
+                    } else {
+                        preconditionFailure("Couldn't construct IPv4 from a sequnce, which contains less than 4 elements")
+                    }
+                }
+            
+                init(from sequence: some Sequence<UInt8>, fillingMissingWith defaultValue: UInt8) {
+                    var iter = sequence.makeIterator()
+                    self.repr = (
+                        iter.next() ?? defaultValue,
+                        iter.next() ?? defaultValue,
+                        iter.next() ?? defaultValue,
+                        iter.next() ?? defaultValue
+                    )
+                }
+            
+                init(fromExactlySized sequence: some Sequence<UInt8>) {
+                    var iter = sequence.makeIterator()
+                    switch (iter.next(), iter.next(), iter.next(), iter.next(), iter.next()) {
+                    case let (v0?, v1?, v2?, v3?, nil):
+                        self.repr = (v0, v1, v2, v3)
+                    case (_?, _?, _?, _?, _?):
+                        preconditionFailure("Couldn't construct IPv4 from an exactly sized sequence, which contains more than 4 elements")
+                    default:
+                        preconditionFailure("Couldn't construct IPv4 from an exactly sized sequnce, which contains less than 4 elements")
+                    }
+                }
+            
                 enum Index: Int, CaseIterable {
                     case i0, i1, i2, i3
                 }
