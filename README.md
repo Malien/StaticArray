@@ -30,7 +30,7 @@ print(addr) // [192, 168, 0, 255]
 ## Installation
 Just shove 
 ```swift
-.package(url: "https://github.com/malien/static-array.git", from: "1.0.0")
+.package(url: "https://github.com/malien/StaticArray.git", from: "1.0.0")
 ```
 into the `dependencies` array of your Package.swift or via XCode's File->Add Package Dependency...
 

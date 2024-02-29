@@ -6,7 +6,7 @@ public macro StaticArray<Element>(count: Count, named: StaticString, visibility:
 /// - Invariant:
 ///     - `Repr` is a homogeneous tuple type
 ///     - `repr` is a field, not a getter/setter pair
-///     -  `count` is an accurate amount of values in a `repr` tuple
+///     - `Index` represents indices only for the amount of elements of the homogeneous tuple, and is convertible from ints `0..<count`
 public protocol UnsafeStaticArrayProtocol {
     associatedtype Element
     associatedtype Repr: Sendable
