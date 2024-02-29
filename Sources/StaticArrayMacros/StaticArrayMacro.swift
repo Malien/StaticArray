@@ -13,7 +13,7 @@ public enum StaticArrayExpansionError: CustomStringConvertible, Error {
         case .invalidCount(got: nil):
             return "#StaticArray expected to receive an argument `count:` which should be a positive number literal"
         case .invalidCount(got: let got?):
-            return "Count of #StaticArray should be a positive (non-zero) integer. Got \(got)"
+            return "Count of #StaticArray should be at least 2. Got \(got)"
         case .noGenericType:
             return "#StaticArray requires setting an element type explicitly using swift's generics syntax, aka: #StaticArray<ElementType>(count: 5, named: \"MyArray\")"
         }
@@ -46,7 +46,7 @@ public struct StaticArrayMacro: DeclarationMacro {
             context.addDiagnostics(from: StaticArrayExpansionError.invalidCount(got: countArg), node: countArg)
             return []
         }
-        if count <= 0 {
+        if count <= 1 {
             context.addDiagnostics(from: StaticArrayExpansionError.invalidCount(got: countArg), node: countArg)
             return []
         }
@@ -73,36 +73,6 @@ public struct StaticArrayMacro: DeclarationMacro {
             }
         }
         
-        let subscriptGetCases = SwitchCaseListSyntax {
-            for (i, indexName) in indices.enumerated() {
-                let label = SwitchCaseLabelSyntax {
-                    SwitchCaseItemSyntax(pattern: ExpressionPatternSyntax(expression: MemberAccessExprSyntax(name: indexName)))
-                }
-                SwitchCaseSyntax(
-                    label: .case(label),
-                    statementsBuilder:  {
-                        "return repr.\(raw: i)"
-                    },
-                    trailingTrivia: .space
-                )
-            }
-        }
-        
-        let subscriptSetCases = SwitchCaseListSyntax {
-            for (i, indexName) in indices.enumerated() {
-                let label = SwitchCaseLabelSyntax {
-                    SwitchCaseItemSyntax(pattern: ExpressionPatternSyntax(expression: MemberAccessExprSyntax(name: indexName)))
-                }
-                SwitchCaseSyntax(
-                    label: .case(label),
-                    statementsBuilder: {
-                        "repr.\(raw: i) = newValue"
-                    },
-                    trailingTrivia: .space
-                )
-            }
-        }
-        
         let initArgNames = (0..<count).map { TokenSyntax.identifier("v\($0)") }
         let arglist = FunctionParameterListSyntax {
             for argName in initArgNames {
@@ -117,8 +87,10 @@ public struct StaticArrayMacro: DeclarationMacro {
         }
         
         return ["""
-        struct \(name): ExpressibleByArrayLiteral {
+        struct \(name): UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral {
             var repr: \(arrayType)
+        
+            typealias Element = \(elementType)
         
             init(_ repr: \(arrayType)) {
                 self.repr = repr
@@ -128,43 +100,8 @@ public struct StaticArrayMacro: DeclarationMacro {
                 self.repr = \(initConstructor)
             }
         
-            enum Index: CaseIterable, Int {
+            enum Index: Int, CaseIterable {
                 case \(indexCaseElements)
-            }
-        
-            subscript(_ index: Index) -> \(elementType) {
-                get {
-                    switch index {
-                    \(subscriptGetCases)
-                    }
-                }
-                set {
-                    switch index {
-                    \(subscriptSetCases)
-                    }
-                }
-            }
-            
-            subscript(safe intIndex: Int) -> \(elementType)? {
-                guard let index = Index(rawValue: intIndex) else { return nil }
-                return self[index]
-            }
-        
-            subscript(_ intIndex: Int) -> \(elementType) {
-                get {
-                    guard let index = Index(rawValue: intIndex)
-                    else { preconditionFailure(
-                        "Attempted to access a static array \(name) (size: \(literal: count)) with an integer index out of bounds (index: \\(intIndex))"
-                    ) }
-                    return self[index]
-                }
-                set {
-                    guard let index = Index(rawValue: intIndex)
-                    else { preconditionFailure(
-                        "Attempted to write to a static array \(name) (size: \(literal: count)) with an integer index out of bounds (index: \\(intIndex))"
-                    ) }
-                    self[index] = newValue
-                }
             }
         
             typealias ArrayLiteralElement = \(elementType)
