@@ -1,6 +1,23 @@
 @freestanding(declaration, names: arbitrary)
 public macro StaticArray<Element>(count: Count, named: StaticString, visibility: Visibility = .none) = #externalMacro(module: "StaticArrayMacros", type: "StaticArrayMacro")
 
+@attached(
+    member,
+    names:
+        named(staticArrayStorage),
+        named(init(_:)),
+        named(init(from:)),
+        named(init(from: fillingMissingWith:)),
+        named(init(fromExactlySized:)),
+        named(Index),
+    conformances: UnsafeStaticArrayProtocol
+)
+@attached(
+    extension,
+    conformances: UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral, CustomStringConvertible
+)
+public macro _StaticArray<Element>(count: Count) = #externalMacro(module: "StaticArrayMacros", type: "StaticArrayMacro")
+
 /// It is unsafe to implement `UnsafeStaticArrayProtocol` outside of the #StaticArray macro
 /// `Repr` type and `repr` field has to have special properties, like:
 /// - Invariant:
@@ -9,9 +26,9 @@ public macro StaticArray<Element>(count: Count, named: StaticString, visibility:
 ///     - `Index` represents indices only for the amount of elements of the homogeneous tuple, and is convertible from ints `0..<count`
 public protocol UnsafeStaticArrayProtocol {
     associatedtype Element
-    associatedtype Repr: Sendable
+    associatedtype StorageType: Sendable
     associatedtype Index: CaseIterable, RawRepresentable<Int>
-    var repr: Repr { get set }
+    var staticArrayStorage: StorageType { get set }
 }
 
 public extension UnsafeStaticArrayProtocol {
@@ -19,13 +36,13 @@ public extension UnsafeStaticArrayProtocol {
     /// - Invariant:
     ///     Iterator passed into the closure cannot escape it. Any use of the iterator outside of it is unsafe and will result in undefined behaviour
     func withUnsafeBuffer<T>(_ body: (UnsafeBufferPointer<Element>) throws -> T) rethrows -> T {
-        return try withUnsafeBytes(of: self.repr) { ptr in
+        return try withUnsafeBytes(of: self.staticArrayStorage) { ptr in
             return try body(ptr.assumingMemoryBound(to: Element.self))
         }
     }
     
     mutating func withUnsafeMutableBuffer<T>(_ body: (UnsafeMutableBufferPointer<Element>) throws -> T) rethrows -> T {
-        return try withUnsafeMutableBytes(of: &self.repr) { ptr in
+        return try withUnsafeMutableBytes(of: &self.staticArrayStorage) { ptr in
             return try body(ptr.assumingMemoryBound(to: Element.self))
         }
     }
@@ -41,7 +58,7 @@ public extension UnsafeStaticArrayProtocol {
     }
     
     static var count: Int {
-        MemoryLayout<Repr>.size / MemoryLayout<Element>.stride
+        MemoryLayout<StorageType>.size / MemoryLayout<Element>.stride
     }
     
     subscript(_ index: Index) -> Element {

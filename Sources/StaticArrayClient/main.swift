@@ -5,6 +5,9 @@ enum Net {
     #StaticArray<UInt8>(count: 16, named: "IPv6")
 }
 
+@_StaticArray<Character>(count: 6)
+struct EmojiSet {}
+
 var addr: Net.IPv4 = [127, 0, 0, 1]
 addr.forEach { print($0) }
 let humanReadable = addr.withUnsafeBuffer { buffer in
