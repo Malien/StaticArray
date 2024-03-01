@@ -1,5 +1,5 @@
 @freestanding(declaration, names: arbitrary)
-public macro StaticArray<Element>(count: Count, named: StaticString, visibility: Visibility = .none) = #externalMacro(module: "StaticArrayMacros", type: "StaticArrayMacro")
+public macro StaticArrayDecl<Element>(count: Count, named: StaticString) = #externalMacro(module: "StaticArrayMacros", type: "StaticArrayMacro")
 
 @attached(
     member,
@@ -9,14 +9,19 @@ public macro StaticArray<Element>(count: Count, named: StaticString, visibility:
         named(init(from:)),
         named(init(from: fillingMissingWith:)),
         named(init(fromExactlySized:)),
-        named(Index),
     conformances: UnsafeStaticArrayProtocol
 )
 @attached(
     extension,
-    conformances: UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral, CustomStringConvertible
+    conformances: UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral, CustomStringConvertible,
+    names:
+        named(Index),
+        named(Element),
+        named(description),
+        named(ArrayLiteralElement),
+        named(init(arrayLiteral:))
 )
-public macro _StaticArray<Element>(count: Count) = #externalMacro(module: "StaticArrayMacros", type: "StaticArrayMacro")
+public macro StaticArray<Element>(count: Count) = #externalMacro(module: "StaticArrayMacros", type: "StaticArrayMacro")
 
 /// It is unsafe to implement `UnsafeStaticArrayProtocol` outside of the #StaticArray macro
 /// `Repr` type and `repr` field has to have special properties, like:
@@ -157,14 +162,6 @@ public extension UnsafeStaticArrayProtocol {
     func max() -> Element where Element: Comparable {
         withUnsafeBuffer { $0.max()! }
     }
-}
-
-public enum Visibility {
-    case `public`, `private`, `none`, `fileprivate`
-}
-
-extension Visibility: ExpressibleByNilLiteral {
-    public init(nilLiteral: ()) { self = .none }
 }
 
 public struct Count { }

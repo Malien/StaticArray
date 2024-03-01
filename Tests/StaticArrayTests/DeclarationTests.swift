@@ -10,7 +10,7 @@ import SwiftSyntaxBuilder
 import StaticArrayMacros
 
 private let testMacros: [String: Macro.Type] = [
-    "StaticArray": StaticArrayMacro.self,
+    "StaticArrayDecl": StaticArrayMacro.self,
 ]
 #endif
 
@@ -19,7 +19,7 @@ final class DeclarationTests: XCTestCase {
         #if canImport(StaticArrayMacros)
         assertMacroExpansion(
             """
-            #StaticArray<UInt8>(count: 4, named: "IPv4")
+            #StaticArrayDecl<UInt8>(count: 4, named: "IPv4")
             """,
             expandedSource: """
             struct IPv4: UnsafeStaticArrayProtocol, ExpressibleByArrayLiteral, CustomStringConvertible {
@@ -105,12 +105,12 @@ final class DeclarationTests: XCTestCase {
         #if canImport(StaticArrayMacros)
         assertMacroExpansion(
             """
-            #StaticArray<()>(count: 1, named: "VoidWrapper")
+            #StaticArrayDecl<()>(count: 1, named: "VoidWrapper")
             """,
             expandedSource: """
             """,
             diagnostics: [
-                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 1", line: 1, column: 25)
+                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 1", line: 1, column: 29)
             ],
             macros: testMacros
         )
@@ -123,12 +123,12 @@ final class DeclarationTests: XCTestCase {
         #if canImport(StaticArrayMacros)
         assertMacroExpansion(
             """
-            #StaticArray<Int>(count: 0, named: "ZST")
+            #StaticArrayDecl<Int>(count: 0, named: "ZST")
             """,
             expandedSource: """
             """,
             diagnostics: [
-                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 0", line: 1, column: 26)
+                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 0", line: 1, column: 30)
             ],
             macros: testMacros
         )
@@ -141,12 +141,12 @@ final class DeclarationTests: XCTestCase {
         #if canImport(StaticArrayMacros)
         assertMacroExpansion(
             """
-            #StaticArray<Int>(count: -1, named: "NegativeMass")
+            #StaticArrayDecl<Int>(count: -1, named: "NegativeMass")
             """,
             expandedSource: """
             """,
             diagnostics: [
-                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got -1", line: 1, column: 26)
+                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got -1", line: 1, column: 30)
             ],
             macros: testMacros
         )

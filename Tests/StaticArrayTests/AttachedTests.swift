@@ -74,9 +74,27 @@ final class AttachedTests: XCTestCase {
                                 preconditionFailure("Couldn't construct IPv4 from an exactly sized sequnce, which contains less than 4 elements")
                             }
                         }
+                    }
+                    
+                    extension IPv4: UnsafeStaticArrayProtocol {
+                        typealias Element = UInt8
                     
                         enum Index: Int, CaseIterable {
                             case i0, i1, i2, i3
+                        }
+                    }
+                    
+                    extension IPv4: CustomStringConvertible {
+                        var description: String {
+                            "[\\(staticArrayStorage.0), \\(staticArrayStorage.1), \\(staticArrayStorage.2), \\(staticArrayStorage.3)]"
+                        }
+                    }
+                    
+                    extension IPv4: ExpressibleByArrayLiteral {
+                        typealias ArrayLiteralElement = UInt8
+                        init(arrayLiteral elements: UInt8...) {
+                            precondition(elements.count == 4, "Type IPv4 (#StaticArray) can only be initialized with array literals with exact size of 4. Got a literal with \\(elements.count) elements")
+                            self.staticArrayStorage = (elements[0], elements[1], elements[2], elements[3])
                         }
                     }
                     """,
@@ -87,57 +105,123 @@ final class AttachedTests: XCTestCase {
         #endif
     }
 
-    //    func testWrapper() throws {
-    //        #if canImport(StaticArrayMacros)
-    //        assertMacroExpansion(
-    //            """
-    //            #StaticArray<()>(count: 1, named: "VoidWrapper")
-    //            """,
-    //            expandedSource: """
-    //            """,
-    //            diagnostics: [
-    //                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 1", line: 1, column: 25)
-    //            ],
-    //            macros: testMacros
-    //        )
-    //        #else
-    //        throw XCTSkip("macros are only supported when running tests for the host platform")
-    //        #endif
-    //    }
+    func testWrapper() throws {
+        #if canImport(StaticArrayMacros)
+        assertMacroExpansion(
+            """
+            @StaticArray<()>(count: 1)
+            struct VoidWrapper {}
+            """,
+            expandedSource: """
+            struct VoidWrapper {}
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 1", line: 1, column: 25)
+            ],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 
-    //    func testZST() throws {
-    //        #if canImport(StaticArrayMacros)
-    //        assertMacroExpansion(
-    //            """
-    //            #StaticArray<Int>(count: 0, named: "ZST")
-    //            """,
-    //            expandedSource: """
-    //            """,
-    //            diagnostics: [
-    //                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 0", line: 1, column: 26)
-    //            ],
-    //            macros: testMacros
-    //        )
-    //        #else
-    //        throw XCTSkip("macros are only supported when running tests for the host platform")
-    //        #endif
-    //    }
-    //
-    //    func testNegativeCount() throws {
-    //        #if canImport(StaticArrayMacros)
-    //        assertMacroExpansion(
-    //            """
-    //            #StaticArray<Int>(count: -1, named: "NegativeMass")
-    //            """,
-    //            expandedSource: """
-    //            """,
-    //            diagnostics: [
-    //                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got -1", line: 1, column: 26)
-    //            ],
-    //            macros: testMacros
-    //        )
-    //        #else
-    //        throw XCTSkip("macros are only supported when running tests for the host platform")
-    //        #endif
-    //    }
+    func testZST() throws {
+        #if canImport(StaticArrayMacros)
+        assertMacroExpansion(
+            """
+            @StaticArray<Int>(count: 0)
+            struct ZST {}
+            """,
+            expandedSource: """
+            struct ZST {}
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got 0", line: 1, column: 26)
+            ],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
+    func testNegativeCount() throws {
+        #if canImport(StaticArrayMacros)
+        assertMacroExpansion(
+            """
+            @StaticArray<Int>(count: -1)
+            struct NegativeMass {}
+            """,
+            expandedSource: """
+            struct NegativeMass {}
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "Count of #StaticArray should be at least 2. Got -1", line: 1, column: 26)
+            ],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+
+    func testOnClass() throws {
+        #if canImport(StaticArrayMacros)
+        assertMacroExpansion(
+            """
+            @StaticArray<UInt8>(count: 4)
+            class IPv4 {}
+            """,
+            expandedSource: """
+            class IPv4 {}
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "@StaticArray can only be declared on the struct types, not classes", line: 2, column: 1)
+            ],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
+    func testOnActor() throws {
+        #if canImport(StaticArrayMacros)
+        assertMacroExpansion(
+            """
+            @StaticArray<UInt8>(count: 4)
+            actor IPv4 {}
+            """,
+            expandedSource: """
+            actor IPv4 {}
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "@StaticArray can only be declared on the struct types, not actors", line: 2, column: 1)
+            ],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
+    
+    func testOnEnum() throws {
+        #if canImport(StaticArrayMacros)
+        assertMacroExpansion(
+            """
+            @StaticArray<UInt8>(count: 4)
+            enum IPv4 {}
+            """,
+            expandedSource: """
+            enum IPv4 {}
+            """,
+            diagnostics: [
+                DiagnosticSpec(message: "@StaticArray can only be declared on the struct types, not enums", line: 2, column: 1)
+            ],
+            macros: testMacros
+        )
+        #else
+        throw XCTSkip("macros are only supported when running tests for the host platform")
+        #endif
+    }
 }

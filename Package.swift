@@ -9,10 +9,7 @@ let package = Package(
     platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
     products: [
         // Products define the executables and libraries a package produces, making them visible to other packages.
-        .library(
-            name: "StaticArray",
-            targets: ["StaticArray"]
-        ),
+        .library(name: "StaticArray", targets: ["StaticArray"]),
     ],
     dependencies: [
         // Depend on the Swift 5.9 release of SwiftSyntax
@@ -32,9 +29,6 @@ let package = Package(
 
         // Library that exposes a macro as part of its API, which is used in client programs.
         .target(name: "StaticArray", dependencies: ["StaticArrayMacros"]),
-
-        // A client of the library, which is able to use the macro in its own code.
-        .executableTarget(name: "StaticArrayClient", dependencies: ["StaticArray"]),
 
         // A test target used to develop the macro implementation.
         .testTarget(
