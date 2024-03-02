@@ -6,6 +6,7 @@ public macro StaticArrayDecl<Element>(count: Count, named: StaticString) = #exte
     names:
         named(staticArrayStorage),
         named(init(_:)),
+        named(init(repeating:)),
         named(init(from:)),
         named(init(from: fillingMissingWith:)),
         named(init(fromExactlySized:)),

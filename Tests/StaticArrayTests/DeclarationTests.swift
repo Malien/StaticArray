@@ -35,6 +35,10 @@ final class DeclarationTests: XCTestCase {
                     self.staticArrayStorage = (v0, v1, v2, v3)
                 }
             
+                init(repeating element: UInt8) {
+                    self.staticArrayStorage = (element, element, element, element)
+                }
+            
                 init(from sequence: some Sequence<UInt8>) {
                     var iter = sequence.makeIterator()
                     let items = (

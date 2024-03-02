@@ -30,6 +30,10 @@ final class AttachedTests: XCTestCase {
                         init(_ repr: (UInt8, UInt8, UInt8, UInt8)) {
                             self.staticArrayStorage = repr
                         }
+                    
+                        init(repeating element: UInt8) {
+                            self.staticArrayStorage = (element, element, element, element)
+                        }
 
                         init(from sequence: some Sequence<UInt8>) {
                             var iter = sequence.makeIterator()

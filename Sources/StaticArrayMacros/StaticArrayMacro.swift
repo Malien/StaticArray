@@ -85,6 +85,10 @@ public struct StaticArrayMacro: DeclarationMacro, MemberMacro, ExtensionMacro {
             self.staticArrayStorage = repr
         }
         
+        init(repeating element: \(elementType)) {
+            self.staticArrayStorage = \(tupleConstructor(argumentNames: repeatElement(TokenSyntax.identifier("element"), count: count)))
+        }
+        
         \(sequenceInit(elementType: elementType, count: count, typeName: typeName))
         
         init(from sequence: some Sequence<\(elementType)>, fillingMissingWith defaultValue: \(elementType)) {
@@ -124,6 +128,10 @@ public struct StaticArrayMacro: DeclarationMacro, MemberMacro, ExtensionMacro {
         
             init(\(functionArgList(argumentNames: initArgNames, elementType: elementType))) {
                 self.staticArrayStorage = \(tupleConstructor(argumentNames: initArgNames))
+            }
+        
+            init(repeating element: \(elementType)) {
+                self.staticArrayStorage = \(tupleConstructor(argumentNames: repeatElement(TokenSyntax.identifier("element"), count: count)))
             }
         
             \(sequenceInit(elementType: elementType, count: count, typeName: typeName))
@@ -269,7 +277,7 @@ func indexCaseElements(count: Int) -> EnumCaseElementListSyntax {
     }
 }
 
-func tupleConstructor(argumentNames: [TokenSyntax]) -> TupleExprSyntax {
+func tupleConstructor(argumentNames: some Sequence<TokenSyntax>) -> TupleExprSyntax {
     return TupleExprSyntax {
         for (argName, trivia) in withGap(argumentNames) {
             LabeledExprSyntax(leadingTrivia: trivia, expression: DeclReferenceExprSyntax(baseName: argName))

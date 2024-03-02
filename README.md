@@ -62,9 +62,9 @@ Swit's structs are copied prevasively throughtout the exection of a program. In 
 
 Don't worry too much, there is a couple of convenience methods on the StaticArray type itself, implemented via the `UnsafeStaticArrayProtocol` extension. As the name suggests, implementing `UnsafeStaticArrayProtocol` outside of the `#StaticArray` macro is unsafe.
 
-If you need other methods like `.map` or `.filter`, one can use `.withUnsafeBuffer` to make all of the transformations inside of it. *BE CAREFUL!*: leaking the iterator to the outside is unsafe. Make sure the result of the transformation is collected into the intermediate owned value.
+If you need other methods like `.map` or `.filter`, one can use `.withUnsafeBuffer` to make all of the transformations inside of it. **BE CAREFUL!**: leaking the iterator to the outside is unsafe. Make sure the result of the transformation is collected into the intermediate owned value.
 
-I'm also looking towards implementing things like `#staticMap(into:_:transform:)` to ease the pain a bit 
+I'm also looking towards implementing things like `#staticMap(_:into:transform:)` to ease the pain a bit. Maybe even bitvector trickery for the `#staticFilter(_:predicate:)`.
 
 ### Why isn't there a `Equatable`, `Comparable` or `Hashable` conformances?
 Ideally user would be able to let the compiler provide the blanket implementation of `Equatable`, `Comparable`, etc like that:
@@ -73,7 +73,7 @@ Ideally user would be able to let the compiler provide the blanket implementatio
 struct IPv4: Equatable {}
 ```
 
-Unfortunately swift tuples don't conform to them, and the progress to make them is kinda stalled ([1](https://forums.swift.org/t/tuples-conform-to-equatable/32559), [2](https://github.com/apple/swift/pull/28833), [3](https://github.com/apple/swift/pull/34492), [4](https://forums.swift.org/t/tuples-conform-to-equatable-comparable-and-hashable/34156), [5](https://forums.swift.org/t/status-of-se-0283-tuples-conform-to-equatable-comparable-and-hashable/46942), [6](https://forums.swift.org/t/pitch-user-defined-tuple-conformances/67154), [7](https://forums.swift.org/t/type-int-cannot-conform-to-equatable/69125)). Since the storage for the elements is provided by tuples (via `staticArrayStorage` property), the issue affect the compiler's ability to synthesize implementations'.
+Unfortunately swift tuples don't conform to them, and the progress to make them is kinda stalled ([1](https://forums.swift.org/t/tuples-conform-to-equatable/32559), [2](https://github.com/apple/swift/pull/28833), [3](https://github.com/apple/swift/pull/34492), [4](https://forums.swift.org/t/tuples-conform-to-equatable-comparable-and-hashable/34156), [5](https://forums.swift.org/t/status-of-se-0283-tuples-conform-to-equatable-comparable-and-hashable/46942), [6](https://forums.swift.org/t/pitch-user-defined-tuple-conformances/67154), [7](https://forums.swift.org/t/type-int-cannot-conform-to-equatable/69125)). Since the storage for the elements is provided by tuples (via `staticArrayStorage` property), the issue affects the compiler's ability to synthesize implementations.
 
 For now the workaround is to provide a conformance like this:
 
